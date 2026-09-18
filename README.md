@@ -1,10 +1,10 @@
-# FreeStack
+# Startup Credits
 
 **An open directory of free cloud, AI and developer-tool credits — for open source maintainers and startup founders.**
 
 Every entry is dated. Dead programmes are flagged, not quietly left up. The data is one JSON file you can send a pull request to.
 
-🔗 **[freestack.dev](https://freestack.dev)** *(replace with your real URL)*
+🔗 **[startupcredits.online](https://startupcredits.online)**
 
 ---
 
@@ -16,7 +16,7 @@ There are plenty of "free startup credits" pages. Almost all of them share three
 2. **They quote you the headline number.** "Up to $350,000!" is real, but it's the top tier, and it needs a warm introduction from a VC or an accelerator. A bootstrapped solo founder reading that page is being sold a number they will never see.
 3. **They're closed.** You can't correct them. They're affiliate funnels with a CMS behind them, and nobody outside the company can fix a wrong figure.
 
-FreeStack does three things differently:
+The site does four things differently:
 
 | | |
 |---|---|
@@ -40,7 +40,7 @@ Only **three** programmes publish a self-serve tier you can get with no investor
 
 ## The eligibility checker
 
-Six clicks — are you a maintainer or a founder, how big is your project, how old is your company, who backs you. It then filters 60+ programmes down to the ones whose published criteria you actually meet, and gives you two totals.
+Two to five clicks — are you a founder or a maintainer, how big is your project, how old is your company, who backs you. It then filters 73 programmes down to the ones whose published criteria you actually meet, and gives you two totals.
 
 It runs entirely in your browser. Nothing is sent anywhere, there's no email gate, and there's no account.
 
@@ -66,7 +66,7 @@ The whole dataset is [`data/programs.json`](data/programs.json). One entry, one 
   "difficulty": "easy",               // "easy" | "moderate" | "hard"
   "referral_required": false,         // does the top tier need a VC/accelerator intro?
   "recurring": true,                  // renews annually, vs a one-off grant
-  "status": "open",                   // "open" | "ended" | "unverified"
+  "status": "open",                   // "open" | "ended" | "closed" | "unverified"
   "requirements": ["Public repo", "OSI-approved licence"],
   "notes": "Anything a applicant would want to know before spending an hour on this.",
   "last_checked": "2026-09-19"        // YYYY-MM-DD, the day you verified it on the official page
