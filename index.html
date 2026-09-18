@@ -95,6 +95,8 @@
   .rstat b{display:block;font-family:var(--mono);font-size:26px;letter-spacing:-.8px;color:var(--accent);line-height:1.15}
   .rstat span{font-size:11.5px;color:var(--dim);display:block;margin-top:3px}
   .rstat.dimmed b{color:var(--dim)}
+  .localnote{font-size:13px;color:var(--fg);margin:14px 0 0;padding:11px 14px;background:var(--accent-dim);
+    border:1px solid var(--accent);border-radius:9px;line-height:1.55}
   .disclaim{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.5}
 
   /* ---------- controls ---------- */
@@ -133,6 +135,7 @@
   .b-open{background:var(--accent-dim);color:var(--accent)}
   .b-ended{background:var(--dead-dim);color:var(--dead)}
   .b-unver{background:var(--warn-dim);color:var(--warn)}
+  .b-closed{background:var(--warn-dim);color:var(--warn)}
   .value{font-family:var(--mono);font-size:14px;color:var(--accent);margin:11px 0 12px;line-height:1.4}
   .card.ended .value{color:var(--dead);text-decoration:line-through}
   .reqs{list-style:none;padding:0;margin:0 0 14px;font-size:12.5px;color:var(--muted);flex:1}
@@ -309,6 +312,7 @@
           <div class="rstat"><b id="r-entry">$0</b><span id="r-entry-label">Realistic today, no referral</span></div>
           <div class="rstat dimmed"><b id="r-head">$0</b><span>Headline max, referral and all</span></div>
         </div>
+        <p class="localnote" id="localnote"></p>
         <p class="disclaim">Other directories quote you the headline number. That figure is almost always the top tier, gated behind a VC or accelerator introduction. The middle number only counts tiers a company has actually published as self-serve — for the rest we count zero rather than guess. It's a guide from published criteria, not a guarantee. Your matches are highlighted below.</p>
       </div>
     </div>
@@ -331,6 +335,10 @@
         <button data-v="all" aria-pressed="true">Any</button>
         <button data-v="noref">No referral</button>
         <button data-v="easy">Easy apply</button>
+      </div>
+      <div class="seg" data-q="country" title="Country programmes are shown alongside the worldwide ones, never instead of them">
+        <button data-v="all" aria-pressed="true">🌍 Worldwide</button>
+        <button data-v="IN">🇮🇳 India</button>
       </div>
     </div>
     <div class="chips" id="cats"></div>
@@ -370,7 +378,14 @@
   "use strict";
 
   var DATA = [];
-  var state = { q:"", track:"all", filter:"all", cat:null, matches:null };
+  var state = { q:"", track:"all", filter:"all", country:"all", cat:null, matches:null };
+
+  // "Worldwide" shows only programmes open to everyone. Picking a country ADDS that
+  // country's local schemes on top - it never hides the global ones.
+  function inCountry(p){
+    return state.country === "all" ? p.country === "GLOBAL"
+                                   : (p.country === "GLOBAL" || p.country === state.country);
+  }
   var answers = { who:null, stars:null, licence:null, age:null, backing:null, rev:null };
 
   var grid   = document.getElementById("grid");
@@ -424,7 +439,23 @@
     "together-startups":   function(a){ return a.age!=="gt10"; },
     "posthog-startups":    function(a){ return a.age!=="gt10"; },        // no age or funding cap published
     "neon-startups":       function(a){ return a.age!=="gt10"; },        // self-funded track needs no investor
-    "mistral-startups":    function(a){ return a.age!=="gt10"; }
+    "mistral-startups":    function(a){ return a.age!=="gt10"; },
+
+    // --- India. Every government scheme needs a registered, recognised company,
+    // so none of them are open to someone still at the idea stage. ---
+    "in-startup-india-seed-fund": function(a){ return a.backing!=="idea" && a.age==="lt5"; },  // must be under 2 years old
+    "in-80iac-tax":              function(a){ return a.backing!=="idea" && a.age!=="gt10"; },
+    "in-credit-guarantee":       function(a){ return a.backing!=="idea"; },
+    "in-nidhi-seed-support":     function(a){ return a.backing!=="idea"; },
+    "in-nidhi-prayas":           function(a){ return a.backing!=="idea"; },
+    "in-nidhi-eir":              function(){ return true; },   // pays the founder; no company needed
+    "in-birac-big":              function(a){ return a.backing!=="idea"; },
+    "in-meity-genesis":          function(a){ return a.backing!=="idea"; },
+    "in-meity-samridh":          function(a){ return a.backing==="vc"||a.backing==="accel"; }, // needs matching investment
+    "in-karnataka-elevate":      function(a){ return a.backing!=="idea"; },
+    "in-startup-odisha":         function(a){ return a.backing!=="idea"; },
+    "in-razorpay-rize":          function(a){ return a.backing!=="idea"; },
+    "nvidia-inception":          function(){ return true; }
   };
 
   /* Two numbers, deliberately. The headline figure on a cloud programme is almost
@@ -455,16 +486,23 @@
       else if(!answers.age || !answers.rev) return null;
     }
 
-    var ids = {}, entry = 0, headline = 0, n = 0;
+    var ids = {}, entry = 0, headline = 0, n = 0, local = 0;
     DATA.forEach(function(p){
       if(p.status === "ended") return;
+      if(!inCountry(p)) return;
       if(p.track === "oss" && !wantOss) return;
       if(p.track === "startup" && !wantStartup) return;
       var rule = RULES[p.id];
       var ok = rule ? rule(answers) : true;
-      if(ok){ ids[p.id] = true; n++; entry += entryValue(p); headline += headlineValue(p); }
+      if(ok){
+        ids[p.id] = true; n++; entry += entryValue(p); headline += headlineValue(p);
+        // Local schemes are quoted in their own currency, so they add nothing to the
+        // dollar totals. Count them separately rather than letting them vanish —
+        // an Indian grant of Rs 1 crore is worth far more than every dollar credit here.
+        if(p.country !== "GLOBAL") local++;
+      }
     });
-    return { ids: ids, count: n, entry: entry, headline: headline };
+    return { ids: ids, count: n, entry: entry, headline: headline, local: local };
   }
 
   function card(p){
@@ -472,8 +510,9 @@
     var cls = "card" + (p.status === "ended" ? " ended" : "") + (isMatch ? " match" : "");
     var badge = p.status === "ended"
       ? '<span class="badge b-ended">Discontinued</span>'
+      : (p.status === "closed" ? '<span class="badge b-closed">Call closed</span>'
       : (p.status === "unverified" ? '<span class="badge b-unver">Unverified</span>'
-      : (isMatch ? '<span class="badge b-open">You qualify</span>' : ""));
+      : (isMatch ? '<span class="badge b-open">You qualify</span>' : "")));
 
     var reqs = (p.requirements || []).slice(0,4).map(function(r){
       return "<li>" + esc(r) + "</li>"; }).join("");
@@ -510,6 +549,7 @@
   function render(){
     var q = state.q.toLowerCase();
     var list = DATA.filter(function(p){
+      if(!inCountry(p)) return false;
       if(state.track !== "all" && p.track !== state.track) return false;
       if(state.cat && p.category !== state.cat) return false;
       if(state.filter === "noref" && p.referral_required) return false;
@@ -573,6 +613,8 @@
       Array.prototype.forEach.call(seg.children, function(el){ el.setAttribute("aria-pressed", "false"); });
       b.setAttribute("aria-pressed", "true");
       state[seg.dataset.q] = b.dataset.v;
+      // Changing country changes what you're eligible for, so the totals must follow.
+      if(seg.dataset.q === "country"){ state.matches = computeMatches(); refreshResult(); }
       render();
     });
   });
@@ -613,6 +655,12 @@
       if(box.dataset.q === "who" || box.dataset.q === "backing") syncCheckerVisibility();
 
       state.matches = computeMatches();
+      refreshResult();
+      render();
+    });
+  });
+
+  function refreshResult(){
       var res = document.getElementById("checker-result");
       if(state.matches){
         res.classList.add("on");
@@ -626,6 +674,12 @@
         document.getElementById("r-count").textContent = state.matches.count;
         document.getElementById("r-entry").textContent = money(state.matches.entry);
         document.getElementById("r-head").textContent  = money(state.matches.headline);
+        var ln = document.getElementById("localnote");
+        ln.textContent = state.matches.local
+          ? "Plus " + state.matches.local + " local schemes in your country, quoted in local currency and deliberately NOT added to the dollar figures above. "
+            + "Several are cash grants you never repay and give up no equity for — worth far more than any credit on this page. Look for the green Government cards below."
+          : "";
+        ln.style.display = state.matches.local ? "" : "none";
         document.getElementById("r-outro").textContent = preStart
           ? "Do those five things and " + state.matches.count + " programmes on this page open up, worth about "
             + money(state.matches.entry) + " you can claim without ever talking to an investor. "
@@ -634,9 +688,7 @@
       } else {
         res.classList.remove("on");
       }
-      render();
-    });
-  });
+  }
 
   /* -------- load -------- */
   fetch("data/programs.json", { cache: "no-store" })
