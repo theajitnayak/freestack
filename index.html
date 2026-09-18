@@ -40,7 +40,9 @@
   .hero{padding:52px 0 36px;text-align:center}
   h1{font-size:clamp(30px,5.2vw,50px);line-height:1.07;letter-spacing:-1.6px;margin:0 0 16px;font-weight:700}
   h1 .g{background:linear-gradient(95deg,#4ade80,#60a5fa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .sub{color:var(--muted);font-size:17px;max-width:600px;margin:0 auto 28px}
+  .sub{color:var(--muted);font-size:17px;max-width:620px;margin:0 auto 14px;line-height:1.6}
+  .sub b{color:var(--fg);font-weight:600}
+  .sub-2{font-size:14.5px;color:var(--dim);margin-bottom:28px}
   .stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:30px}
   .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 18px;min-width:118px}
   .stat b{display:block;font-size:21px;font-family:var(--mono);letter-spacing:-.5px;color:var(--fg)}
@@ -60,6 +62,27 @@
   .checker .hint{color:var(--dim);font-size:13px;margin:0 0 20px}
   .q{margin-bottom:18px}
   .q-label{font-size:13px;color:var(--muted);margin-bottom:8px;display:block}
+  .helpbtn{background:none;border:0;color:var(--blue);font-family:inherit;font-size:12px;cursor:pointer;
+    padding:0 0 0 8px;text-decoration:underline;text-underline-offset:2px}
+  .helpbtn:hover{color:#8cc0fb}
+  .help{display:none;margin:9px 0 0;padding:13px 15px;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:9px;font-size:13px;color:var(--muted);line-height:1.6}
+  .help.on{display:block}
+  .help p{margin:0 0 9px}
+  .help p:last-child{margin-bottom:0}
+  .help b{color:var(--fg);font-weight:600}
+  .help em{color:var(--accent);font-style:normal}
+
+  .readiness{display:none;margin-top:20px;padding:20px;background:var(--blue-dim);
+    border:1px solid var(--blue);border-radius:12px}
+  .readiness.on{display:block}
+  .readiness h3{margin:0 0 8px;font-size:16px;color:var(--fg);letter-spacing:-.2px}
+  .r-intro{font-size:13.5px;color:var(--muted);margin:0 0 14px;line-height:1.6}
+  .r-steps{margin:0;padding-left:20px;font-size:13.5px;color:var(--muted);line-height:1.65}
+  .r-steps li{margin-bottom:10px}
+  .r-steps b{color:var(--fg);font-weight:600}
+  .r-steps em{color:var(--blue);font-style:normal}
+  .r-outro{font-size:13.5px;color:var(--fg);margin:14px 0 0;padding-top:13px;border-top:1px solid rgba(96,165,250,.25)}
   .opts{display:flex;gap:7px;flex-wrap:wrap}
   .opt{border:1px solid var(--line);background:var(--panel-2);color:var(--muted);padding:7px 14px;border-radius:8px;
     font-size:13px;cursor:pointer;font-family:inherit;transition:.12s}
@@ -163,7 +186,8 @@
 
     <div class="hero">
       <h1>Free credits you<br><span class="g">actually qualify for</span></h1>
-      <p class="sub">An open directory of cloud, AI and developer-tool credit programmes for open source maintainers and startup founders. Every entry dated. Dead programmes flagged, not quietly left up.</p>
+      <p class="sub">Big tech companies give away free money to people building things. It's called <b>credits</b> — a balance on your account that pays your bills for servers, databases and AI until it runs out. There are 60 such programmes here. Most founders never hear about any of them.</p>
+      <p class="sub sub-2">Every entry says the date it was checked and where its numbers came from. Programmes that have quietly died stay on the page, marked, so you don't waste an afternoon on one.</p>
       <div class="stats">
         <div class="stat"><b id="s-count">—</b><span>Programmes</span></div>
         <div class="stat"><b id="s-value">—</b><span>Trackable value</span></div>
@@ -178,37 +202,43 @@
 
     <div class="checker" id="checker">
       <h2>Eligibility check</h2>
-      <p class="hint">Six clicks. Nothing is sent anywhere — this runs entirely in your browser.</p>
+      <p class="hint">Two to five clicks. No email, no account, and nothing leaves your browser. If a word here is unfamiliar, tap <span style="color:var(--blue)">what do these mean?</span> — no question is a silly one.</p>
 
       <div class="q">
-        <span class="q-label">I am…</span>
+        <span class="q-label">Which of these sounds like you?
+          <button class="helpbtn" data-help="h-who">what do these mean?</button>
+        </span>
         <div class="opts" data-q="who">
-          <button class="opt" data-v="oss">An open source maintainer</button>
-          <button class="opt" data-v="startup">A startup founder</button>
+          <button class="opt" data-v="startup">I'm building a company</button>
+          <button class="opt" data-v="oss">I maintain a public code project</button>
           <button class="opt" data-v="both">Both</button>
         </div>
-      </div>
-
-      <div class="q" data-show="oss">
-        <span class="q-label">My most popular repo has…</span>
-        <div class="opts" data-q="stars">
-          <button class="opt" data-v="lt100">Under 100 stars</button>
-          <button class="opt" data-v="lt1k">100 – 1,000</button>
-          <button class="opt" data-v="lt10k">1,000 – 10,000</button>
-          <button class="opt" data-v="gt10k">10,000+</button>
-        </div>
-      </div>
-
-      <div class="q" data-show="oss">
-        <span class="q-label">Licence</span>
-        <div class="opts" data-q="licence">
-          <button class="opt" data-v="osi">OSI-approved (MIT, Apache, GPL…)</button>
-          <button class="opt" data-v="other">Something else / none yet</button>
+        <div class="help" id="h-who">
+          <p><b>Building a company</b> — you're starting a business, or already run one. Even if it's just you and an idea right now, pick this.</p>
+          <p><b>Public code project</b> — you wrote code that you put on the internet for anyone to use and copy, usually on GitHub. This is what "open source" means. Companies give these away free because free tools make their platform popular.</p>
         </div>
       </div>
 
       <div class="q" data-show="startup">
-        <span class="q-label">Company age</span>
+        <span class="q-label">Where does your money come from?
+          <button class="helpbtn" data-help="h-backing">what do these mean?</button>
+        </span>
+        <div class="opts" data-q="backing">
+          <button class="opt" data-v="idea">Just an idea so far</button>
+          <button class="opt" data-v="boot">My own money</button>
+          <button class="opt" data-v="accel">I'm in an accelerator</button>
+          <button class="opt" data-v="vc">Investors put money in</button>
+        </div>
+        <div class="help" id="h-backing">
+          <p><b>Just an idea so far</b> — you haven't registered a company yet, or you registered it but there's no website or product. Completely normal. Pick this and we'll show you the short list of things to put in place first.</p>
+          <p><b>My own money</b> — the company exists and you pay for everything yourself, from savings or from what customers pay you. The industry word for this is <em>bootstrapped</em>. Most founders in the world are here.</p>
+          <p><b>I'm in an accelerator</b> — you got into a programme like Y Combinator, Techstars or a local equivalent. They give you a small amount of money, advice and contacts over about three months, in exchange for a small share of your company.</p>
+          <p><b>Investors put money in</b> — a venture capital firm (a "VC") or a wealthy individual (an "angel") gave you money in exchange for owning part of your company. This unlocks the biggest credit amounts, because the cloud companies trust the investor's judgement.</p>
+        </div>
+      </div>
+
+      <div class="q" data-show="startup" data-hide-if-idea>
+        <span class="q-label">How old is the company?</span>
         <div class="opts" data-q="age">
           <button class="opt" data-v="lt5">Under 5 years</button>
           <button class="opt" data-v="lt10">5 – 10 years</button>
@@ -216,28 +246,67 @@
         </div>
       </div>
 
-      <div class="q" data-show="startup">
-        <span class="q-label">Backing</span>
-        <div class="opts" data-q="backing">
-          <button class="opt" data-v="boot">Bootstrapped</button>
-          <button class="opt" data-v="accel">In an accelerator / incubator</button>
-          <button class="opt" data-v="vc">VC-backed</button>
-        </div>
-      </div>
-
-      <div class="q" data-show="startup">
-        <span class="q-label">Annual revenue</span>
+      <div class="q" data-show="startup" data-hide-if-idea>
+        <span class="q-label">Roughly how much money does it make a year?
+          <button class="helpbtn" data-help="h-rev">not sure?</button>
+        </span>
         <div class="opts" data-q="rev">
           <button class="opt" data-v="lt1m">Under $1M</button>
           <button class="opt" data-v="lt10m">$1M – $10M</button>
           <button class="opt" data-v="gt10m">Over $10M</button>
         </div>
+        <div class="help" id="h-rev">
+          <p>This means total money customers paid you over the last year, before costs. If you're not selling anything yet, that's $0 — pick <b>Under $1M</b>. Nearly every programme here is aimed at companies under $1M, so this rarely counts against you.</p>
+        </div>
+      </div>
+
+      <div class="q" data-show="oss">
+        <span class="q-label">How popular is your project?
+          <button class="helpbtn" data-help="h-stars">what's a star?</button>
+        </span>
+        <div class="opts" data-q="stars">
+          <button class="opt" data-v="lt100">Under 100 stars</button>
+          <button class="opt" data-v="lt1k">100 – 1,000</button>
+          <button class="opt" data-v="lt10k">1,000 – 10,000</button>
+          <button class="opt" data-v="gt10k">10,000+</button>
+        </div>
+        <div class="help" id="h-stars">
+          <p>On GitHub, a <b>star</b> is a bookmark — anyone who likes your project can click a star on it. The number is public and sits at the top of your project page. It's the rough measure companies use to judge how popular a project is.</p>
+          <p>Under 100 is completely fine. Plenty of the tools here ask only that your code is public.</p>
+        </div>
+      </div>
+
+      <div class="q" data-show="oss">
+        <span class="q-label">What licence is on it?
+          <button class="helpbtn" data-help="h-licence">what's a licence?</button>
+        </span>
+        <div class="opts" data-q="licence">
+          <button class="opt" data-v="osi">MIT, Apache, GPL or similar</button>
+          <button class="opt" data-v="other">Something else, or none yet</button>
+        </div>
+        <div class="help" id="h-licence">
+          <p>A <b>licence</b> is a short text file in your project saying what other people are allowed to do with your code. Without one, legally nobody may use it.</p>
+          <p>Most companies here require a standard, recognised licence — MIT and Apache 2.0 are the common ones, and MIT is the simplest. Adding one takes about a minute on GitHub, and it unlocks roughly a third more programmes on this page.</p>
+        </div>
+      </div>
+
+      <div class="readiness" id="readiness">
+        <h3>You're earlier than most of these programmes expect — here's the fix</h3>
+        <p class="r-intro">Almost every company on this page asks for the same five basic things before they'll give you anything. None of them need funding, permission, or much money. Once these exist, most of the list opens up.</p>
+        <ol class="r-steps">
+          <li><b>Register the company.</b> Nearly every programme requires a real, registered business — not a person. Whatever's normal and cheapest where you live is fine.</li>
+          <li><b>Buy a domain name and put your email on it.</b> This is the one that quietly disqualifies the most people. Cloudflare and DigitalOcean both refuse applications from gmail.com addresses — they want <em>you@yourcompany.com</em>. A domain costs about $10 a year.</li>
+          <li><b>Put up a website, even a single page.</b> It has to be publicly reachable and it has to load. It can say what you're building and nothing else. Reviewers open it before they approve you.</li>
+          <li><b>Create a LinkedIn, X or GitHub page for the company.</b> Cloudflare asks for this by name. It's a five-minute job and it proves you're real.</li>
+          <li><b>Build something that works, however rough.</b> The industry calls it an <em>MVP</em> — minimum viable product, the smallest version that does the main thing. IBM and Oracle both require one.</li>
+        </ol>
+        <p class="r-outro" id="r-outro"></p>
       </div>
 
       <div class="checker-result" id="checker-result">
         <div class="rstats">
-          <div class="rstat"><b id="r-count">0</b><span>Programmes you likely qualify for</span></div>
-          <div class="rstat"><b id="r-entry">$0</b><span>Realistic today, no referral</span></div>
+          <div class="rstat"><b id="r-count">0</b><span id="r-count-label">Programmes you likely qualify for</span></div>
+          <div class="rstat"><b id="r-entry">$0</b><span id="r-entry-label">Realistic today, no referral</span></div>
           <div class="rstat dimmed"><b id="r-head">$0</b><span>Headline max, referral and all</span></div>
         </div>
         <p class="disclaim">Other directories quote you the headline number. That figure is almost always the top tier, gated behind a VC or accelerator introduction. The middle number only counts tiers a company has actually published as self-serve — for the rest we count zero rather than guess. It's a guide from published criteria, not a guarantee. Your matches are highlighted below.</p>
@@ -378,7 +447,13 @@
     var wantOss = answers.who === "oss" || answers.who === "both";
     var wantStartup = answers.who === "startup" || answers.who === "both";
     if(wantOss && (!answers.stars || !answers.licence)) return null;
-    if(wantStartup && (!answers.age || !answers.backing || !answers.rev)) return null;
+    if(wantStartup){
+      if(!answers.backing) return null;
+      // "Just an idea" skips the age and revenue questions entirely: we score them
+      // as a brand-new, pre-revenue company and show the readiness checklist instead.
+      if(answers.backing === "idea"){ answers.age = "lt5"; answers.rev = "lt1m"; }
+      else if(!answers.age || !answers.rev) return null;
+    }
 
     var ids = {}, entry = 0, headline = 0, n = 0;
     DATA.forEach(function(p){
@@ -510,12 +585,24 @@
 
   function syncCheckerVisibility(){
     var who = answers.who;
+    var preStart = answers.backing === "idea";
     Array.prototype.forEach.call(document.querySelectorAll("[data-show]"), function(el){
-      var s = el.dataset.show;
-      var vis = who === "both" || who === s;
+      var vis = who === "both" || who === el.dataset.show;
+      // Someone with just an idea has no company age or revenue to report — don't ask.
+      if(vis && preStart && el.hasAttribute("data-hide-if-idea")) vis = false;
       el.style.display = vis ? "" : "none";
     });
+    document.getElementById("readiness").classList.toggle("on", !!preStart);
   }
+
+  // "what do these mean?" toggles
+  document.addEventListener("click", function(e){
+    var b = e.target.closest(".helpbtn"); if(!b) return;
+    var box = document.getElementById(b.dataset.help); if(!box) return;
+    if(!b.dataset.label) b.dataset.label = b.textContent;   // remember each button's own wording
+    var open = box.classList.toggle("on");
+    b.textContent = open ? "hide" : b.dataset.label;
+  });
 
   Array.prototype.forEach.call(document.querySelectorAll(".opts"), function(box){
     box.addEventListener("click", function(e){
@@ -523,15 +610,27 @@
       Array.prototype.forEach.call(box.children, function(el){ el.setAttribute("aria-pressed", "false"); });
       b.setAttribute("aria-pressed", "true");
       answers[box.dataset.q] = b.dataset.v;
-      if(box.dataset.q === "who") syncCheckerVisibility();
+      if(box.dataset.q === "who" || box.dataset.q === "backing") syncCheckerVisibility();
 
       state.matches = computeMatches();
       var res = document.getElementById("checker-result");
       if(state.matches){
         res.classList.add("on");
+        var preStart = answers.backing === "idea";
+        // A founder with just an idea hasn't qualified for anything yet — saying
+        // "you qualify" would be a lie. Frame it as what the five steps unlock.
+        document.getElementById("r-count-label").textContent =
+          preStart ? "Programmes those 5 steps unlock" : "Programmes you likely qualify for";
+        document.getElementById("r-entry-label").textContent =
+          preStart ? "Realistic then, no investor" : "Realistic today, no referral";
         document.getElementById("r-count").textContent = state.matches.count;
         document.getElementById("r-entry").textContent = money(state.matches.entry);
         document.getElementById("r-head").textContent  = money(state.matches.headline);
+        document.getElementById("r-outro").textContent = preStart
+          ? "Do those five things and " + state.matches.count + " programmes on this page open up, worth about "
+            + money(state.matches.entry) + " you can claim without ever talking to an investor. "
+            + "Most founders can finish the whole list in a weekend for around $10."
+          : "";
       } else {
         res.classList.remove("on");
       }
