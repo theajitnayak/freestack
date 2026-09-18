@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FreeStack — Free credits you actually qualify for</title>
+<meta name="description" content="An open, freshness-checked directory of free cloud, AI and developer-tool credits for open source maintainers and startup founders. Every entry dated. Dead programmes flagged.">
+<meta property="og:title" content="FreeStack — Free credits you actually qualify for">
+<meta property="og:description" content="60+ verified credit programmes for OSS maintainers and startup founders. Every entry dated. Dead programmes flagged, not hidden.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎁</text></svg>">
+<style>
+  :root{
+    --bg:#0c0d10; --panel:#141519; --panel-2:#1a1c21; --line:#25272e;
+    --fg:#e8e9ec; --muted:#8e919c; --dim:#6b6e78;
+    --accent:#4ade80; --accent-dim:#16341f;
+    --warn:#fbbf24; --warn-dim:#3a2e0d;
+    --dead:#f87171; --dead-dim:#3a1a1a;
+    --blue:#60a5fa; --blue-dim:#152a44;
+    --radius:12px;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+  /* ---------- header ---------- */
+  header{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#101217,var(--bg))}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:650;font-size:16px;letter-spacing:-.2px;text-decoration:none}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+  .nav-right{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  .ghbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);
+    padding:7px 13px;border-radius:8px;text-decoration:none;color:var(--fg);font-size:13px;transition:.15s}
+  .ghbtn:hover{border-color:#3a3d47;background:var(--panel-2)}
+
+  .hero{padding:52px 0 36px;text-align:center}
+  h1{font-size:clamp(30px,5.2vw,50px);line-height:1.07;letter-spacing:-1.6px;margin:0 0 16px;font-weight:700}
+  h1 .g{background:linear-gradient(95deg,#4ade80,#60a5fa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .sub{color:var(--muted);font-size:17px;max-width:600px;margin:0 auto 28px}
+  .stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:30px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 18px;min-width:118px}
+  .stat b{display:block;font-size:21px;font-family:var(--mono);letter-spacing:-.5px;color:var(--fg)}
+  .stat span{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.7px}
+
+  .cta-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .btn{border:0;cursor:pointer;font-family:inherit;font-size:14px;font-weight:550;padding:11px 22px;border-radius:9px;transition:.15s;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary{background:var(--accent);color:#06210f}
+  .btn-primary:hover{background:#6ee79b;transform:translateY(-1px)}
+  .btn-ghost{background:var(--panel);color:var(--fg);border:1px solid var(--line)}
+  .btn-ghost:hover{border-color:#3a3d47}
+
+  /* ---------- checker ---------- */
+  .checker{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;margin:36px 0 0;display:none}
+  .checker.on{display:block}
+  .checker h2{margin:0 0 4px;font-size:19px;letter-spacing:-.3px}
+  .checker .hint{color:var(--dim);font-size:13px;margin:0 0 20px}
+  .q{margin-bottom:18px}
+  .q-label{font-size:13px;color:var(--muted);margin-bottom:8px;display:block}
+  .opts{display:flex;gap:7px;flex-wrap:wrap}
+  .opt{border:1px solid var(--line);background:var(--panel-2);color:var(--muted);padding:7px 14px;border-radius:8px;
+    font-size:13px;cursor:pointer;font-family:inherit;transition:.12s}
+  .opt:hover{border-color:#3a3d47;color:var(--fg)}
+  .opt[aria-pressed="true"]{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+  .checker-result{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);display:none}
+  .checker-result.on{display:block}
+  .rstats{display:flex;gap:10px;flex-wrap:wrap}
+  .rstat{flex:1;min-width:150px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .rstat b{display:block;font-family:var(--mono);font-size:26px;letter-spacing:-.8px;color:var(--accent);line-height:1.15}
+  .rstat span{font-size:11.5px;color:var(--dim);display:block;margin-top:3px}
+  .rstat.dimmed b{color:var(--dim)}
+  .disclaim{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.5}
+
+  /* ---------- controls ---------- */
+  .controls{position:sticky;top:0;z-index:20;background:rgba(12,13,16,.92);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);padding:14px 0;margin-top:40px}
+  .ctl-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .search{flex:1;min-width:200px;position:relative}
+  .search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:9px;
+    padding:10px 14px 10px 36px;color:var(--fg);font-family:inherit;font-size:14px;outline:none;transition:.15s}
+  .search input:focus{border-color:var(--accent)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.45}
+  .seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px}
+  .seg button{background:none;border:0;color:var(--muted);padding:6px 14px;border-radius:6px;cursor:pointer;
+    font-family:inherit;font-size:13px;transition:.12s;white-space:nowrap}
+  .seg button[aria-pressed="true"]{background:var(--panel-2);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+  .chip{border:1px solid var(--line);background:transparent;color:var(--dim);font-size:12px;padding:5px 11px;
+    border-radius:20px;cursor:pointer;font-family:inherit;transition:.12s}
+  .chip:hover{color:var(--fg);border-color:#3a3d47}
+  .chip[aria-pressed="true"]{background:var(--blue-dim);border-color:var(--blue);color:var(--blue)}
+
+  /* ---------- grid ---------- */
+  .meta-row{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 14px;flex-wrap:wrap;gap:8px}
+  .count{font-size:13px;color:var(--dim);font-family:var(--mono)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;padding-bottom:50px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;
+    display:flex;flex-direction:column;transition:.15s;position:relative}
+  .card:hover{border-color:#383b45;transform:translateY(-2px)}
+  .card.match{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-dim)}
+  .card.ended{opacity:.6}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px}
+  .co{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+  .card h3{margin:2px 0 0;font-size:16px;letter-spacing:-.2px;font-weight:600}
+  .badge{font-size:10px;padding:3px 8px;border-radius:5px;font-weight:650;text-transform:uppercase;
+    letter-spacing:.5px;white-space:nowrap;flex-shrink:0}
+  .b-open{background:var(--accent-dim);color:var(--accent)}
+  .b-ended{background:var(--dead-dim);color:var(--dead)}
+  .b-unver{background:var(--warn-dim);color:var(--warn)}
+  .value{font-family:var(--mono);font-size:14px;color:var(--accent);margin:11px 0 12px;line-height:1.4}
+  .card.ended .value{color:var(--dead);text-decoration:line-through}
+  .reqs{list-style:none;padding:0;margin:0 0 14px;font-size:12.5px;color:var(--muted);flex:1}
+  .reqs li{padding-left:15px;position:relative;margin-bottom:5px;line-height:1.45}
+  .reqs li:before{content:"";position:absolute;left:3px;top:8px;width:4px;height:4px;border-radius:50%;background:var(--dim)}
+  .note{font-size:12px;color:var(--dim);background:var(--panel-2);border-left:2px solid var(--line);
+    padding:8px 10px;border-radius:0 6px 6px 0;margin-bottom:13px;line-height:1.45}
+  .card-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    border-top:1px solid var(--line);padding-top:12px;margin-top:auto}
+  .tags{display:flex;gap:5px;flex-wrap:wrap}
+  .tag{font-size:10.5px;color:var(--dim);border:1px solid var(--line);padding:2px 7px;border-radius:4px}
+  .apply{font-size:13px;color:var(--accent);text-decoration:none;font-weight:550;white-space:nowrap}
+  .apply:hover{text-decoration:underline}
+  .checked{font-size:10.5px;color:var(--dim);font-family:var(--mono);margin-top:8px}
+
+  .empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--dim)}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line);padding:34px 0 50px;color:var(--dim);font-size:13px}
+  .foot-grid{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  footer a{color:var(--muted);text-decoration:none}
+  footer a:hover{color:var(--fg)}
+  .contrib{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:28px}
+  .contrib h3{margin:0 0 6px;font-size:15px;color:var(--fg)}
+  .contrib code{background:var(--panel-2);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:12px;color:var(--accent)}
+
+  @media (max-width:640px){
+    .hero{padding:36px 0 26px}
+    .grid{grid-template-columns:1fr}
+    .checker{padding:20px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav class="nav">
+      <a class="brand" href="/"><span class="dot"></span> FreeStack</a>
+      <div class="nav-right">
+        <span id="freshness">checked 2026-09-19</span>
+        <a class="ghbtn" href="https://github.com/YOUR_USERNAME/freestack" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          Contribute
+        </a>
+      </div>
+    </nav>
+
+    <div class="hero">
+      <h1>Free credits you<br><span class="g">actually qualify for</span></h1>
+      <p class="sub">An open directory of cloud, AI and developer-tool credit programmes for open source maintainers and startup founders. Every entry dated. Dead programmes flagged, not quietly left up.</p>
+      <div class="stats">
+        <div class="stat"><b id="s-count">—</b><span>Programmes</span></div>
+        <div class="stat"><b id="s-value">—</b><span>Trackable value</span></div>
+        <div class="stat"><b id="s-noref">—</b><span>No referral needed</span></div>
+        <div class="stat"><b id="s-dead">—</b><span>Flagged dead</span></div>
+      </div>
+      <div class="cta-row">
+        <button class="btn btn-primary" id="open-checker">What do I qualify for? →</button>
+        <a class="btn btn-ghost" href="#browse">Browse all</a>
+      </div>
+    </div>
+
+    <div class="checker" id="checker">
+      <h2>Eligibility check</h2>
+      <p class="hint">Six clicks. Nothing is sent anywhere — this runs entirely in your browser.</p>
+
+      <div class="q">
+        <span class="q-label">I am…</span>
+        <div class="opts" data-q="who">
+          <button class="opt" data-v="oss">An open source maintainer</button>
+          <button class="opt" data-v="startup">A startup founder</button>
+          <button class="opt" data-v="both">Both</button>
+        </div>
+      </div>
+
+      <div class="q" data-show="oss">
+        <span class="q-label">My most popular repo has…</span>
+        <div class="opts" data-q="stars">
+          <button class="opt" data-v="lt100">Under 100 stars</button>
+          <button class="opt" data-v="lt1k">100 – 1,000</button>
+          <button class="opt" data-v="lt10k">1,000 – 10,000</button>
+          <button class="opt" data-v="gt10k">10,000+</button>
+        </div>
+      </div>
+
+      <div class="q" data-show="oss">
+        <span class="q-label">Licence</span>
+        <div class="opts" data-q="licence">
+          <button class="opt" data-v="osi">OSI-approved (MIT, Apache, GPL…)</button>
+          <button class="opt" data-v="other">Something else / none yet</button>
+        </div>
+      </div>
+
+      <div class="q" data-show="startup">
+        <span class="q-label">Company age</span>
+        <div class="opts" data-q="age">
+          <button class="opt" data-v="lt5">Under 5 years</button>
+          <button class="opt" data-v="lt10">5 – 10 years</button>
+          <button class="opt" data-v="gt10">Over 10 years</button>
+        </div>
+      </div>
+
+      <div class="q" data-show="startup">
+        <span class="q-label">Backing</span>
+        <div class="opts" data-q="backing">
+          <button class="opt" data-v="boot">Bootstrapped</button>
+          <button class="opt" data-v="accel">In an accelerator / incubator</button>
+          <button class="opt" data-v="vc">VC-backed</button>
+        </div>
+      </div>
+
+      <div class="q" data-show="startup">
+        <span class="q-label">Annual revenue</span>
+        <div class="opts" data-q="rev">
+          <button class="opt" data-v="lt1m">Under $1M</button>
+          <button class="opt" data-v="lt10m">$1M – $10M</button>
+          <button class="opt" data-v="gt10m">Over $10M</button>
+        </div>
+      </div>
+
+      <div class="checker-result" id="checker-result">
+        <div class="rstats">
+          <div class="rstat"><b id="r-count">0</b><span>Programmes you likely qualify for</span></div>
+          <div class="rstat"><b id="r-entry">$0</b><span>Realistic today, no referral</span></div>
+          <div class="rstat dimmed"><b id="r-head">$0</b><span>Headline max, referral and all</span></div>
+        </div>
+        <p class="disclaim">Other directories quote you the headline number. That figure is almost always the top tier, gated behind a VC or accelerator introduction. The middle number only counts tiers a company has actually published as self-serve — for the rest we count zero rather than guess. It's a guide from published criteria, not a guarantee. Your matches are highlighted below.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="controls" id="browse">
+  <div class="wrap">
+    <div class="ctl-row">
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="q" type="search" placeholder="Search company, programme or requirement…" autocomplete="off">
+      </div>
+      <div class="seg" data-q="track">
+        <button data-v="all" aria-pressed="true">All</button>
+        <button data-v="oss">Open source</button>
+        <button data-v="startup">Startup</button>
+      </div>
+      <div class="seg" data-q="filter">
+        <button data-v="all" aria-pressed="true">Any</button>
+        <button data-v="noref">No referral</button>
+        <button data-v="easy">Easy apply</button>
+      </div>
+    </div>
+    <div class="chips" id="cats"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="meta-row">
+    <span class="count" id="count">loading…</span>
+    <span class="count" id="sortnote">sorted by listed value</span>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="contrib">
+      <h3>Know a programme we're missing? Or one that's died?</h3>
+      <p style="margin:0 0 10px">The data is a single open file — <code>data/programs.json</code>. One entry, one pull request. Flagging a dead programme is as valuable as adding a live one; that's the whole point of this list.</p>
+      <a class="ghbtn" href="https://github.com/YOUR_USERNAME/freestack/blob/main/data/programs.json" target="_blank" rel="noopener">Edit the data →</a>
+    </div>
+    <div class="foot-grid">
+      <div>
+        <strong style="color:var(--fg)">FreeStack</strong> — open data, MIT licensed.<br>
+        Not affiliated with any listed company. Always verify on the official page before applying.
+      </div>
+      <div style="text-align:right">
+        <a href="https://github.com/YOUR_USERNAME/freestack">GitHub</a> &nbsp;·&nbsp;
+        <a href="https://github.com/YOUR_USERNAME/freestack/issues/new">Report stale entry</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var DATA = [];
+  var state = { q:"", track:"all", filter:"all", cat:null, matches:null };
+  var answers = { who:null, stars:null, licence:null, age:null, backing:null, rev:null };
+
+  var grid   = document.getElementById("grid");
+  var countEl= document.getElementById("count");
+  var catsEl = document.getElementById("cats");
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+  function money(n){
+    if(n>=1000000) return "$"+(n/1000000).toFixed(1).replace(/\.0$/,"")+"M";
+    if(n>=1000)    return "$"+Math.round(n/1000)+"k";
+    return "$"+n;
+  }
+
+  /* ---------------- eligibility rules ----------------
+     Each rule returns true when the user plausibly qualifies.
+     Missing rule => any user on the right track plausibly qualifies. */
+  var RULES = {
+    // --- open source: scaled by project reach ---
+    "anthropic-oss":  function(a){ return a.licence==="osi" && (a.stars==="lt10k"||a.stars==="gt10k"); },
+    "vercel-oss":     function(a){ return a.licence==="osi" && (a.stars==="lt10k"||a.stars==="gt10k"); },
+    "openai-codex-oss":function(a){ return a.licence==="osi" && (a.stars==="lt10k"||a.stars==="gt10k"); },
+    "neon-oss":       function(a){ return a.licence==="osi" && a.stars!=="lt100"; },
+    "cloudflare-alexandria": function(a){ return a.licence==="osi" && a.stars!=="lt100"; },
+    "signpath-oss":   function(a){ return a.licence==="osi" && a.stars!=="lt100"; },
+    "docker-dsos":    function(a){ return a.licence==="osi" && a.stars!=="lt100"; },
+    "datadog-oss":    function(a){ return a.licence==="osi" && a.stars!=="lt100"; },
+    "atlassian-oss":  function(a){ return a.licence==="osi"; },
+    "jetbrains-oss":  function(a){ return a.licence==="osi"; },
+    "gitlab-oss":     function(a){ return a.licence==="osi"; },
+    "1password-oss":  function(a){ return a.licence==="osi"; },
+    "crowdin-oss":    function(a){ return a.licence==="osi"; },
+    "tembo-oss":      function(a){ return a.licence==="osi"; },
+    "greptile-oss":   function(a){ return a.licence==="osi"; },
+    "github-copilot-maintainer": function(a){ return a.stars!=="lt100"; },
+    "microsoft-foss-fund": function(){ return false; }, // nomination-only, never self-serve
+
+    // --- startups ---
+    "gcp-startups":        function(a){ return a.age==="lt5" && (a.backing==="vc"||a.backing==="accel"); },
+    "cloudflare-startups": function(a){ return a.age==="lt5"; },
+    "microsoft-founders-hub": function(a){ return a.age!=="gt10" && a.rev!=="gt10m"; },
+    "ibm-startups":        function(a){ return a.age==="lt5" && a.rev==="lt1m"; },
+    "aws-activate":        function(a){ return a.age!=="gt10"; }, // $1k self-serve tier is open to all
+    "digitalocean-hatch":  function(a){ return a.age==="lt5"; },
+    "oracle-startups":     function(a){ return a.age!=="gt10"; },
+    "databricks-startups": function(a){ return a.backing==="vc"||a.backing==="accel"; },
+    "anthropic-startups":  function(a){ return a.age!=="gt10"; },
+    "together-startups":   function(a){ return a.age!=="gt10"; },
+    "posthog-startups":    function(a){ return a.age==="lt5" && a.rev==="lt1m"; },
+    "neon-startups":       function(a){ return a.age==="lt5"; },
+    "mistral-startups":    function(a){ return a.age!=="gt10"; }
+  };
+
+  /* Two numbers, deliberately. The headline figure on a cloud programme is almost
+     always the top tier sitting behind a VC referral. Showing a bootstrapped founder
+     "$571k available" is the exact dishonesty this site exists to correct.
+       entry    = what you could realistically get today, from documented tiers only
+       headline = the published maximum, referral and all */
+  function entryValue(p){
+    if(p.status !== "open") return 0;
+    if(typeof p.entry_usd === "number") return p.entry_usd;  // documented self-serve tier
+    if(p.track === "oss") return p.value_usd || 0;           // OSS grants are flat, not tiered
+    return 0;                                                // startup entry tier not published
+  }
+  function headlineValue(p){
+    return p.status === "open" ? (p.value_usd || 0) : 0;
+  }
+
+  function computeMatches(){
+    if(!answers.who) return null;
+    var wantOss = answers.who === "oss" || answers.who === "both";
+    var wantStartup = answers.who === "startup" || answers.who === "both";
+    if(wantOss && (!answers.stars || !answers.licence)) return null;
+    if(wantStartup && (!answers.age || !answers.backing || !answers.rev)) return null;
+
+    var ids = {}, entry = 0, headline = 0, n = 0;
+    DATA.forEach(function(p){
+      if(p.status === "ended") return;
+      if(p.track === "oss" && !wantOss) return;
+      if(p.track === "startup" && !wantStartup) return;
+      var rule = RULES[p.id];
+      var ok = rule ? rule(answers) : true;
+      if(ok){ ids[p.id] = true; n++; entry += entryValue(p); headline += headlineValue(p); }
+    });
+    return { ids: ids, count: n, entry: entry, headline: headline };
+  }
+
+  function card(p){
+    var isMatch = state.matches && state.matches.ids[p.id];
+    var cls = "card" + (p.status === "ended" ? " ended" : "") + (isMatch ? " match" : "");
+    var badge = p.status === "ended"
+      ? '<span class="badge b-ended">Discontinued</span>'
+      : (p.status === "unverified" ? '<span class="badge b-unver">Unverified</span>'
+      : (isMatch ? '<span class="badge b-open">You qualify</span>' : ""));
+
+    var reqs = (p.requirements || []).slice(0,4).map(function(r){
+      return "<li>" + esc(r) + "</li>"; }).join("");
+
+    var tags = [];
+    tags.push(p.track === "oss" ? "Open source" : "Startup");
+    tags.push(esc(p.category));
+    if(p.referral_required) tags.push("Referral");
+    if(p.recurring) tags.push("Recurring");
+
+    return '<article class="' + cls + '">' +
+      '<div class="card-top"><div><div class="co">' + esc(p.company) + '</div>' +
+      '<h3>' + esc(p.name) + '</h3></div>' + badge + '</div>' +
+      '<div class="value">' + esc(p.value_label) + '</div>' +
+      (reqs ? '<ul class="reqs">' + reqs + '</ul>' : '<div style="flex:1"></div>') +
+      (p.notes ? '<div class="note">' + esc(p.notes) + '</div>' : "") +
+      '<div class="card-foot">' +
+      '<div class="tags">' + tags.map(function(t){ return '<span class="tag">' + t + "</span>"; }).join("") + "</div>" +
+      (p.status === "ended" ? '<span class="apply" style="color:var(--dead)">Do not apply</span>'
+        : '<a class="apply" href="' + esc(p.url) + '" target="_blank" rel="noopener">Apply →</a>') +
+      "</div>" +
+      '<div class="checked">verified ' + esc(p.last_checked) + "</div>" +
+      "</article>";
+  }
+
+  function render(){
+    var q = state.q.toLowerCase();
+    var list = DATA.filter(function(p){
+      if(state.track !== "all" && p.track !== state.track) return false;
+      if(state.cat && p.category !== state.cat) return false;
+      if(state.filter === "noref" && p.referral_required) return false;
+      if(state.filter === "easy" && p.difficulty !== "easy") return false;
+      if(q){
+        var hay = (p.company + " " + p.name + " " + p.category + " " + p.value_label + " " +
+                   (p.requirements || []).join(" ") + " " + (p.notes || "")).toLowerCase();
+        if(hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+
+    list.sort(function(a, b){
+      var am = state.matches && state.matches.ids[a.id] ? 1 : 0;
+      var bm = state.matches && state.matches.ids[b.id] ? 1 : 0;
+      if(am !== bm) return bm - am;
+      var ad = a.status === "ended" ? 1 : 0, bd = b.status === "ended" ? 1 : 0;
+      if(ad !== bd) return ad - bd;
+      return (b.value_usd || 0) - (a.value_usd || 0);
+    });
+
+    grid.innerHTML = list.length
+      ? list.map(card).join("")
+      : '<div class="empty">Nothing matches those filters. Try clearing the search.</div>';
+    countEl.textContent = list.length + " of " + DATA.length + " programmes";
+  }
+
+  function buildCats(){
+    var cats = {};
+    DATA.forEach(function(p){ cats[p.category] = (cats[p.category] || 0) + 1; });
+    catsEl.innerHTML = Object.keys(cats).sort().map(function(c){
+      return '<button class="chip" data-cat="' + esc(c) + '">' + esc(c) + " <span style='opacity:.5'>" + cats[c] + "</span></button>";
+    }).join("");
+    catsEl.addEventListener("click", function(e){
+      var b = e.target.closest(".chip"); if(!b) return;
+      var c = b.dataset.cat;
+      state.cat = (state.cat === c) ? null : c;
+      Array.prototype.forEach.call(catsEl.children, function(el){
+        el.setAttribute("aria-pressed", el.dataset.cat === state.cat ? "true" : "false"); });
+      render();
+    });
+  }
+
+  function buildStats(){
+    var open = DATA.filter(function(p){ return p.status !== "ended"; });
+    var total = open.reduce(function(s, p){ return s + (p.value_usd || 0); }, 0);
+    document.getElementById("s-count").textContent = DATA.length;
+    document.getElementById("s-value").textContent = money(total);
+    document.getElementById("s-noref").textContent = open.filter(function(p){ return !p.referral_required; }).length;
+    document.getElementById("s-dead").textContent = DATA.filter(function(p){ return p.status === "ended"; }).length;
+  }
+
+  /* -------- wiring -------- */
+  document.getElementById("q").addEventListener("input", function(e){
+    state.q = e.target.value; render();
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".seg"), function(seg){
+    seg.addEventListener("click", function(e){
+      var b = e.target.closest("button"); if(!b) return;
+      Array.prototype.forEach.call(seg.children, function(el){ el.setAttribute("aria-pressed", "false"); });
+      b.setAttribute("aria-pressed", "true");
+      state[seg.dataset.q] = b.dataset.v;
+      render();
+    });
+  });
+
+  document.getElementById("open-checker").addEventListener("click", function(){
+    var c = document.getElementById("checker");
+    c.classList.add("on");
+    c.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  function syncCheckerVisibility(){
+    var who = answers.who;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-show]"), function(el){
+      var s = el.dataset.show;
+      var vis = who === "both" || who === s;
+      el.style.display = vis ? "" : "none";
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".opts"), function(box){
+    box.addEventListener("click", function(e){
+      var b = e.target.closest(".opt"); if(!b) return;
+      Array.prototype.forEach.call(box.children, function(el){ el.setAttribute("aria-pressed", "false"); });
+      b.setAttribute("aria-pressed", "true");
+      answers[box.dataset.q] = b.dataset.v;
+      if(box.dataset.q === "who") syncCheckerVisibility();
+
+      state.matches = computeMatches();
+      var res = document.getElementById("checker-result");
+      if(state.matches){
+        res.classList.add("on");
+        document.getElementById("r-count").textContent = state.matches.count;
+        document.getElementById("r-entry").textContent = money(state.matches.entry);
+        document.getElementById("r-head").textContent  = money(state.matches.headline);
+      } else {
+        res.classList.remove("on");
+      }
+      render();
+    });
+  });
+
+  /* -------- load -------- */
+  fetch("data/programs.json", { cache: "no-store" })
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(d){
+      DATA = d.programs;
+      document.getElementById("freshness").textContent = "checked " + d.updated;
+      buildStats(); buildCats(); syncCheckerVisibility(); render();
+    })
+    .catch(function(err){
+      countEl.textContent = "failed to load data";
+      grid.innerHTML = '<div class="empty">Could not load <code>data/programs.json</code> (' + esc(err.message) +
+        ').<br><br>If you opened this file directly from disk, run a local server instead:<br>' +
+        '<code style="color:var(--accent)">npx serve</code> or <code style="color:var(--accent)">python -m http.server</code></div>';
+    });
+})();
+</script>
+</body>
+</html>
