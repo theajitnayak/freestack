@@ -121,6 +121,9 @@
     border-top:1px solid var(--line);padding-top:12px;margin-top:auto}
   .tags{display:flex;gap:5px;flex-wrap:wrap}
   .tag{font-size:10.5px;color:var(--dim);border:1px solid var(--line);padding:2px 7px;border-radius:4px}
+  .t-official{color:var(--accent);border-color:var(--accent-dim);background:var(--accent-dim);cursor:help}
+  .t-reported{color:var(--warn);border-color:var(--warn-dim);background:var(--warn-dim);cursor:help}
+  .t-community{cursor:help}
   .apply{font-size:13px;color:var(--accent);text-decoration:none;font-weight:550;white-space:nowrap}
   .apply:hover{text-decoration:underline}
   .checked{font-size:10.5px;color:var(--dim);font-family:var(--mono);margin-top:8px}
@@ -339,17 +342,19 @@
 
     // --- startups ---
     "gcp-startups":        function(a){ return a.age==="lt5" && (a.backing==="vc"||a.backing==="accel"); },
-    "cloudflare-startups": function(a){ return a.age==="lt5"; },
+    "cloudflare-startups": function(a){ return a.age!=="gt10"; },        // 10 years; Tier 3 takes bootstrapped
     "microsoft-founders-hub": function(a){ return a.age!=="gt10" && a.rev!=="gt10m"; },
     "ibm-startups":        function(a){ return a.age==="lt5" && a.rev==="lt1m"; },
-    "aws-activate":        function(a){ return a.age!=="gt10"; }, // $1k self-serve tier is open to all
-    "digitalocean-hatch":  function(a){ return a.age==="lt5"; },
+    "aws-activate":        function(a){ return a.age!=="gt10"; },        // 10 years; Founders tier is self-serve
+    "digitalocean-hatch":  function(a){ return a.age!=="gt10"; },        // no age bar stated, cap is on raised
     "oracle-startups":     function(a){ return a.age!=="gt10"; },
     "databricks-startups": function(a){ return a.backing==="vc"||a.backing==="accel"; },
-    "anthropic-startups":  function(a){ return a.age!=="gt10"; },
+    // Anthropic's FAQ requires institutional equity funding and founding within 4 years,
+    // even though the same page says "with or without VC backing". We follow the stricter text.
+    "anthropic-startups":  function(a){ return a.age==="lt5" && (a.backing==="vc"||a.backing==="accel"); },
     "together-startups":   function(a){ return a.age!=="gt10"; },
-    "posthog-startups":    function(a){ return a.age==="lt5" && a.rev==="lt1m"; },
-    "neon-startups":       function(a){ return a.age==="lt5"; },
+    "posthog-startups":    function(a){ return a.age!=="gt10"; },        // no age or funding cap published
+    "neon-startups":       function(a){ return a.age!=="gt10"; },        // self-funded track needs no investor
     "mistral-startups":    function(a){ return a.age!=="gt10"; }
   };
 
@@ -404,6 +409,14 @@
     if(p.referral_required) tags.push("Referral");
     if(p.recurring) tags.push("Recurring");
 
+    var SRC = {
+      official:  ["t-official",  "✓ official page",  "Figures read off the company's own page on the date shown."],
+      reported:  ["t-reported",  "⚠ reported only",  "The company does not publish these figures. Everything here comes from third-party reports — verify before you spend time applying."],
+      community: ["t-community", "community",        "Sourced from a community-maintained perks list rather than checked individually."]
+    };
+    var s = SRC[p.source];
+    var srcTag = s ? '<span class="tag ' + s[0] + '" title="' + esc(s[2]) + '">' + s[1] + "</span>" : "";
+
     return '<article class="' + cls + '">' +
       '<div class="card-top"><div><div class="co">' + esc(p.company) + '</div>' +
       '<h3>' + esc(p.name) + '</h3></div>' + badge + '</div>' +
@@ -411,7 +424,7 @@
       (reqs ? '<ul class="reqs">' + reqs + '</ul>' : '<div style="flex:1"></div>') +
       (p.notes ? '<div class="note">' + esc(p.notes) + '</div>' : "") +
       '<div class="card-foot">' +
-      '<div class="tags">' + tags.map(function(t){ return '<span class="tag">' + t + "</span>"; }).join("") + "</div>" +
+      '<div class="tags">' + srcTag + tags.map(function(t){ return '<span class="tag">' + t + "</span>"; }).join("") + "</div>" +
       (p.status === "ended" ? '<span class="apply" style="color:var(--dead)">Do not apply</span>'
         : '<a class="apply" href="' + esc(p.url) + '" target="_blank" rel="noopener">Apply →</a>') +
       "</div>" +

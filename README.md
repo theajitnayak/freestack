@@ -23,6 +23,20 @@ FreeStack does three things differently:
 | **Dated entries** | Every programme carries a `last_checked` date, shown on the card. You can see exactly how stale the claim is. |
 | **Dead programmes stay visible** | Marked `status: "ended"` with a red badge and a "do not apply" note, so you stop hunting for something that's gone. |
 | **Two numbers, not one** | The eligibility checker shows what you can realistically get *today with no referral* alongside the headline maximum. The gap between those two numbers is usually enormous, and it's the most useful thing on the page. |
+| **Every card says where its figures came from** | `✓ official page` means someone read it off the company's own site on the date shown. `⚠ reported only` means the company publishes nothing and the number comes from third-party directories. You should treat those two very differently. |
+
+### What checking all 14 startup programmes actually turned up
+
+On 2026-09-19 every startup entry was checked against the company's own page. More than half were wrong on the figures the other directories repeat:
+
+- **AWS Activate** — the Portfolio ceiling is **$200,000**, not the $100,000 everyone quotes, and the self-serve Founders tier goes to **$5,000**, not $1,000.
+- **Cloudflare** — the maximum is **$350,000**, not $250,000, and there's a **$10,000 tier explicitly for bootstrapped founders with no partner** that almost nobody lists.
+- **Databricks** — relaunched as a joint programme with Neon at **$200,000 combined**, up from the $50,000 still listed elsewhere. The URL moved too.
+- **DigitalOcean** — publishes **no award amounts at all**, so the $100,000 figure in circulation is unsourced.
+- **Anthropic** — its own page contradicts itself, listing institutional equity funding as a requirement and then saying the programme is open with or without VC backing.
+- **Google, Microsoft, IBM, Oracle, Together, Mistral** — publish no verifiable tier amounts on any public page. Six of fourteen.
+
+Only **three** programmes publish a self-serve tier you can get with no investor: Cloudflare ($10,000), AWS ($5,000) and Neon ($1,000). A bootstrapped founder's realistic total is around **$16,000** — against a headline of **$950,000**.
 
 ## The eligibility checker
 
