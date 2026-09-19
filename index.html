@@ -97,6 +97,23 @@
   .rstat.dimmed b{color:var(--dim)}
   .localnote{font-size:13px;color:var(--fg);margin:14px 0 0;padding:11px 14px;background:var(--accent-dim);
     border:1px solid var(--accent);border-radius:9px;line-height:1.55}
+  .signup{margin-top:16px;padding:16px 18px;background:var(--panel-2);border:1px solid var(--line);border-radius:11px}
+  .su-copy b{display:block;font-size:14.5px;color:var(--fg);font-weight:600;margin-bottom:4px}
+  .su-copy span{display:block;font-size:12.5px;color:var(--dim);line-height:1.55}
+  .su-form{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .su-form input{flex:1;min-width:190px;background:var(--bg);border:1px solid var(--line);border-radius:8px;
+    padding:10px 13px;color:var(--fg);font-family:inherit;font-size:14px;outline:none;transition:.15s}
+  .su-form input:focus{border-color:var(--accent)}
+  .su-form input.err{border-color:var(--dead)}
+  .su-form button{background:var(--accent);color:#06210f;border:0;border-radius:8px;padding:10px 20px;
+    font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
+  .su-form button:hover{background:#6ee79b}
+  .su-form button[disabled]{opacity:.55;cursor:default}
+  .su-msg{font-size:12.5px;margin:9px 0 0;display:none;line-height:1.5}
+  .su-msg.on{display:block}
+  .su-msg.bad{color:var(--dead)}
+  .su-msg.good{color:var(--accent)}
+  .signup.done .su-form,.signup.done .su-copy span{display:none}
   .disclaim{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.5}
 
   /* ---------- controls ---------- */
@@ -313,6 +330,17 @@
           <div class="rstat dimmed"><b id="r-head">$0</b><span>Headline max, referral and all</span></div>
         </div>
         <p class="localnote" id="localnote"></p>
+        <div class="signup" id="signup">
+          <div class="su-copy">
+            <b id="su-head">Want to know when this changes?</b>
+            <span id="su-sub">Programmes close, amounts change, and new ones open without any announcement. We re-check them and email you when something moves. No more than that.</span>
+          </div>
+          <form class="su-form" id="su-form" novalidate>
+            <input id="su-email" type="email" inputmode="email" autocomplete="email" placeholder="you@yourcompany.com" aria-label="Your email address">
+            <button type="submit" id="su-btn">Notify me</button>
+          </form>
+          <p class="su-msg" id="su-msg" role="status"></p>
+        </div>
         <p class="disclaim">Other directories quote you the headline number. That figure is almost always the top tier, gated behind a VC or accelerator introduction. The middle number only counts tiers a company has actually published as self-serve — for the rest we count zero rather than guess. It's a guide from published criteria, not a guarantee. Your matches are highlighted below.</p>
       </div>
     </div>
@@ -674,6 +702,13 @@
         document.getElementById("r-count").textContent = state.matches.count;
         document.getElementById("r-entry").textContent = money(state.matches.entry);
         document.getElementById("r-head").textContent  = money(state.matches.headline);
+        // Tie the ask to what they just saw — a number they recognise beats "subscribe".
+        var su = document.getElementById("signup");
+        if(su && !su.classList.contains("done")){
+          document.getElementById("su-head").textContent = preStart
+            ? "Shall we tell you when a programme you could reach opens up?"
+            : "You qualify for " + state.matches.count + ". We'll tell you when that changes.";
+        }
         var ln = document.getElementById("localnote");
         ln.textContent = state.matches.local
           ? "Plus " + state.matches.local + " local schemes in your country, quoted in local currency and deliberately NOT added to the dollar figures above. "
@@ -689,6 +724,63 @@
         res.classList.remove("on");
       }
   }
+
+  /* -------- email signup --------
+     Posts to a Google Form, which means no server and no third-party tracker.
+     Google Forms rejects cross-origin reads, so the request goes out as
+     no-cors: the row is written, but the browser will not let us read the
+     response. We therefore cannot truthfully report a server-side failure,
+     only a network one. */
+  var SIGNUP = {
+    endpoint: "https://docs.google.com/forms/d/1iiVgxw9plcUIIgnAqOrIE7j7zK3fFSj_0SqdIKUrWQQ/formResponse",
+    email:    "entry.1141956331",
+    country:  "entry.787139728"
+  };
+
+  var suForm = document.getElementById("su-form");
+  var suMsg  = document.getElementById("su-msg");
+  var suMail = document.getElementById("su-email");
+
+  function suSay(text, kind){
+    suMsg.textContent = text;
+    suMsg.className = "su-msg on " + (kind || "");
+  }
+
+  suMail.addEventListener("input", function(){
+    suMail.classList.remove("err");
+    if(suMsg.classList.contains("bad")) suMsg.className = "su-msg";
+  });
+
+  suForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var email = suMail.value.trim();
+    // Deliberately loose: something@something.something. Anything stricter
+    // rejects valid addresses, and the cost of a bad row is near zero.
+    if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){
+      suMail.classList.add("err");
+      suMail.focus();
+      suSay(email ? "That doesn't look like an email address." : "Enter your email first.", "bad");
+      return;
+    }
+
+    var btn = document.getElementById("su-btn");
+    btn.disabled = true; btn.textContent = "Sending…";
+
+    var body = new FormData();
+    body.append(SIGNUP.email, email);
+    body.append(SIGNUP.country, state.country === "all" ? "Worldwide" : state.country);
+
+    fetch(SIGNUP.endpoint, { method: "POST", mode: "no-cors", body: body })
+      .then(function(){
+        document.getElementById("signup").classList.add("done");
+        document.getElementById("su-head").textContent = "Done — you're on the list.";
+        suSay("We'll only email you when a programme actually changes. Nothing else, and you can reply 'stop' any time.", "good");
+      })
+      .catch(function(){
+        btn.disabled = false; btn.textContent = "Notify me";
+        suSay("That didn't send — check your connection and try again.", "bad");
+      });
+  });
 
   /* -------- load -------- */
   fetch("data/programs.json", { cache: "no-store" })
