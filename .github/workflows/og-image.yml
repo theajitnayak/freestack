@@ -1,0 +1,65 @@
+name: Build social preview image
+
+# Renders og.html to og.png at exactly 1200x630 and commits it.
+#
+# Done in CI rather than by hand because the card carries live numbers - the
+# programme count and the realistic-vs-advertised figures. A preview image that
+# still claims "80 programmes" a year from now is the same rot this site exists
+# to fight, so the image regenerates from source whenever that source changes.
+on:
+  push:
+    paths:
+      - og.html
+      - .github/workflows/og-image.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install a headless browser
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm i -D playwright@latest >/dev/null 2>&1
+          npx playwright install --with-deps chromium
+
+      - name: Render og.html at 1200x630
+        run: |
+          cat > render.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          const browser = await chromium.launch();
+          // deviceScaleFactor 2 renders at 2400x1260 so the card stays sharp on
+          // retina timelines; platforms downscale it cleanly.
+          const page = await browser.newPage({
+            viewport: { width: 1200, height: 630 },
+            deviceScaleFactor: 2,
+          });
+          await page.goto('file://' + process.cwd() + '/og.html');
+          await page.waitForLoadState('networkidle');
+          await page.screenshot({ path: 'og.png', clip: { x: 0, y: 0, width: 1200, height: 630 } });
+          await browser.close();
+          console.log('rendered og.png');
+          EOF
+          node render.mjs
+          ls -la og.png
+
+      - name: Commit the image if it changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add og.png
+          if git diff --staged --quiet; then
+            echo "preview image unchanged"
+          else
+            git commit -m "Rebuild social preview image from og.html"
+            git push
+          fi
