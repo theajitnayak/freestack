@@ -1,0 +1,88 @@
+name: Weekly terms check
+
+# check-links.yml asks whether the application links still resolve. This asks
+# whether the pages still SAY what we publish — the amount, the eligibility bar,
+# whether the programme is still open. That is the claim the site is built on,
+# and it is the one that decays silently.
+#
+# Runs on Wednesdays so it does not collide with the Monday link check: two
+# separate issues landing the same morning is how both get ignored.
+on:
+  schedule:
+    - cron: "0 6 * * 3"   # Wednesdays, 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Comma-separated programme ids (blank = all 80)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  issues: write
+  id-token: write          # required for Workload Identity Federation
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Exchanges the run's OIDC token for GCP credentials. No long-lived key
+      # lives in this repo. See the setup notes in scripts/check-terms.mjs.
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          token_format: access_token
+
+      - name: Re-read every programme page
+        id: terms
+        continue-on-error: true      # drift should open an issue, not just go red
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+          GOOGLE_CLOUD_LOCATION: us-central1
+          GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          REPORT_PATH: terms-report.md
+          ONLY: ${{ inputs.only }}
+        run: node scripts/check-terms.mjs
+
+      - name: Open an issue when terms appear to have moved
+        if: steps.terms.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('terms-report.md', 'utf8');
+            const title = `Terms check: programmes may have changed (${new Date().toISOString().slice(0,10)})`;
+
+            // Reuse the open issue rather than filing a new one every week.
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'stale-data',
+            });
+            const existing = open.find(i => i.title.startsWith('Terms check:'));
+
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.number, title, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['stale-data'],
+              });
+            }
+
+      - name: Publish the report in the run summary
+        if: always()
+        run: cat terms-report.md >> "$GITHUB_STEP_SUMMARY"
