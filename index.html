@@ -465,7 +465,9 @@
     "microsoft-foss-fund": function(){ return false; }, // nomination-only, never self-serve
 
     // --- startups ---
-    "gcp-startups":        function(a){ return a.age==="lt5" && (a.backing==="vc"||a.backing==="accel"); },
+    // Start tier is explicitly for startups NOT yet backed by equity funding,
+    // so this must not require an investor. Scale allows 10 years, Start 5.
+    "gcp-startups":        function(a){ return a.age!=="gt10"; },
     "cloudflare-startups": function(a){ return a.age!=="gt10"; },        // 10 years; Tier 3 takes bootstrapped
     "microsoft-founders-hub": function(a){ return a.age!=="gt10" && a.rev!=="gt10m"; },
     "ibm-startups":        function(a){ return a.age==="lt5" && a.rev==="lt1m"; },
