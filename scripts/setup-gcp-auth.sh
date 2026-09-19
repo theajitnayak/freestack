@@ -18,7 +18,10 @@
 #
 set -euo pipefail
 
-PROJECT="${GCP_PROJECT:-project-432db1bb-a8a3-4cf6-a6b6}"
+# The project linked to the billing account holding the free trial credit.
+# Confirmed with `gcloud billing projects describe`; the other three projects on
+# this account have billing disabled. Note the id ends -ab6, not -a6b6.
+PROJECT="${GCP_PROJECT:-project-432db1bb-a8a3-4cf6-ab6}"
 REPO="${GH_REPO:-theajitnayak/freestack}"
 SA_NAME="terms-check"
 POOL="github"
@@ -35,6 +38,19 @@ for p in \
   [ -f "$p" ] && GCLOUD="$p"
 done
 [ -n "$GCLOUD" ] || { echo "gcloud not found. Install the Google Cloud SDK first."; exit 1; }
+
+# The SDK's default Windows location contains a space ("Cloud SDK"), and
+# gcloud.cmd is a batch file: invoked from Git Bash inside an `if` with
+# redirections, cmd.exe re-splits the path and dies on the space. Swapping in
+# the 8.3 short name sidesteps it entirely. Harmless everywhere else.
+case "$GCLOUD" in
+  *" "*)
+    WIN_PATH="$(cygpath -w "$GCLOUD" 2>/dev/null || echo "$GCLOUD")"
+    SHORT="$(powershell -NoProfile -Command \
+      "(New-Object -ComObject Scripting.FileSystemObject).GetFile('${WIN_PATH}').ShortPath" 2>/dev/null | tr -d '\r')"
+    [ -n "$SHORT" ] && GCLOUD="$(cygpath -u "$SHORT" 2>/dev/null || echo "$SHORT")"
+    ;;
+esac
 
 GH="$(command -v gh || true)"
 [ -n "$GH" ] || [ ! -f "/c/Program Files/GitHub CLI/gh.exe" ] || GH="/c/Program Files/GitHub CLI/gh.exe"

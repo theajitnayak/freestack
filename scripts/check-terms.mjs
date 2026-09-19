@@ -281,7 +281,13 @@ for (const r of results) {
     });
   }
 
-  const gating = newGatingRequirements(p.requirements, found.requirements);
+  // Compare against everything we say about the programme, not just the
+  // requirements array. Half the eligibility detail on this site lives in
+  // `notes` — "Tier 3 is explicitly for bootstrapped or self-funded startups
+  // with under $1M raised" is a note, not a requirement — and ignoring it makes
+  // the check re-report things we have already told the reader.
+  const weAlreadySay = [...p.requirements, p.notes || "", p.value_label || "", p.name || ""];
+  const gating = newGatingRequirements(weAlreadySay, found.requirements);
   if (gating.length) {
     changes.push({
       field: "requirements",

@@ -115,6 +115,19 @@ export function amountChanged(ours, theirs) {
   const b = numbersIn(theirs);
   if (!b.length) return false; // page states no amount — silence, not drift
   if (!a.length) return true;  // we publish a number, page now states a different one
+
+  // Being MORE detailed than the page is the normal state of this directory,
+  // not drift. Cloudflare's headline says "up to $350k"; we break out the $10k
+  // bootstrapped tier and the $100k tier because that is the useful part and it
+  // is buried further down their page. Flagging that every week would train us
+  // to skim the report, which costs more than the check is worth.
+  //
+  // So: a page whose figures are all ones we already list, topping out where we
+  // top out, has told us nothing new. Anything else gets a look.
+  const ourFigures = new Set(a);
+  const pageIsSubset = b.every((n) => ourFigures.has(n));
+  if (pageIsSubset && Math.max(...b) === Math.max(...a)) return false;
+
   return JSON.stringify(a) !== JSON.stringify(b);
 }
 

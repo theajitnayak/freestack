@@ -129,3 +129,17 @@ test("classifyLabel treats credits with no figure as unpublished, not uncategori
   // A tax deduction is genuinely not a credit offer — amount drift cannot apply.
   assert.equal(classifyLabel("100% income-tax deduction for 3 financial years"), "other");
 });
+
+test("amountChanged ignores a page that just states its headline figure", () => {
+  // Cloudflare's page says "up to $350k"; we break out the $10k bootstrapped
+  // tier because that is the part a reader actually needs. Not drift.
+  assert.equal(amountChanged("$10k bootstrapped / $100k / $350k max", "Up to $350k in credits"), false);
+  assert.equal(amountChanged("Up to $5,000 self-serve / up to $200,000 with a partner", "Up to $200,000"), false);
+});
+
+test("amountChanged still catches a page whose ceiling moved", () => {
+  // Subset of our figures, but the top tier is gone — that is worth a look.
+  assert.equal(amountChanged("$10k / $100k / $350k max", "Up to $100k in credits"), true);
+  // A figure we do not list at all.
+  assert.equal(amountChanged("$10k / $100k / $350k max", "Up to $500k in credits"), true);
+});
