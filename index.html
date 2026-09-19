@@ -158,6 +158,9 @@
   .reqs{list-style:none;padding:0;margin:0 0 14px;font-size:12.5px;color:var(--muted);flex:1}
   .reqs li{padding-left:15px;position:relative;margin-bottom:5px;line-height:1.45}
   .reqs li:before{content:"";position:absolute;left:3px;top:8px;width:4px;height:4px;border-radius:50%;background:var(--dim)}
+  .quote{margin:0 0 12px;padding:10px 12px;background:rgba(74,222,128,.055);border-left:2px solid var(--accent);
+    border-radius:0 6px 6px 0;font-size:12.5px;color:var(--fg);line-height:1.5;font-style:italic}
+  .quote cite{display:block;margin-top:5px;font-style:normal;font-size:10.5px;color:var(--dim);letter-spacing:.2px}
   .note{font-size:12px;color:var(--dim);background:var(--panel-2);border-left:2px solid var(--line);
     padding:8px 10px;border-radius:0 6px 6px 0;margin-bottom:13px;line-height:1.45}
   .card-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;
@@ -564,6 +567,10 @@
       '<h3>' + esc(p.name) + '</h3></div>' + badge + '</div>' +
       '<div class="value">' + esc(p.value_label) + '</div>' +
       (reqs ? '<ul class="reqs">' + reqs + '</ul>' : '<div style="flex:1"></div>') +
+      // The company's own words, quoted. This is the receipt: anyone can open the
+      // link and find this sentence. It is why "verified" here means something.
+      (p.source_quote ? '<blockquote class="quote">“' + esc(p.source_quote) + '”' +
+        '<cite>' + esc(p.company) + ', their own page</cite></blockquote>' : "") +
       (p.notes ? '<div class="note">' + esc(p.notes) + '</div>' : "") +
       '<div class="card-foot">' +
       '<div class="tags">' + srcTag + tags.map(function(t){ return '<span class="tag">' + t + "</span>"; }).join("") + "</div>" +

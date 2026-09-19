@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>og</title>
+<!--
+  Source for the social preview card. Rendered at exactly 1200x630 (the size
+  X, LinkedIn, Slack, WhatsApp and Facebook all crop to) and screenshotted to
+  og.png. Kept as HTML rather than a binary-only asset so the numbers can be
+  regenerated when the data changes.
+-->
+<style>
+  @font-face{font-family:x;src:local("Segoe UI")}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1200px;height:630px;overflow:hidden}
+  body{background:#0c0d10;color:#e8e9ec;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    display:flex;flex-direction:column;justify-content:space-between;padding:62px 70px;
+    background-image:radial-gradient(900px 420px at 88% -10%, rgba(74,222,128,.13), transparent 62%);}
+  .brand{display:flex;align-items:center;gap:13px;font-size:25px;font-weight:600;letter-spacing:-.3px}
+  .dot{width:15px;height:15px;border-radius:50%;background:#4ade80;box-shadow:0 0 26px #4ade80}
+  h1{font-size:78px;line-height:1.03;letter-spacing:-2.8px;font-weight:700;margin-top:34px}
+  h1 .g{background:linear-gradient(95deg,#4ade80,#60a5fa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .compare{display:flex;align-items:stretch;gap:20px;margin-top:40px}
+  .cell{flex:1;border:1px solid #25272e;border-radius:15px;padding:22px 26px;background:#141519}
+  .cell.real{border-color:#4ade80;background:rgba(74,222,128,.09)}
+  .cell b{display:block;font-size:52px;letter-spacing:-2px;line-height:1.1;
+    font-family:ui-monospace,Consolas,monospace}
+  .cell.real b{color:#4ade80}
+  .cell.ad b{color:#6b6e78;text-decoration:line-through;text-decoration-thickness:3px}
+  .cell span{display:block;font-size:17px;color:#8e919c;margin-top:9px;line-height:1.35}
+  .foot{display:flex;justify-content:space-between;align-items:flex-end}
+  .foot .url{font-size:28px;font-weight:600;letter-spacing:-.4px}
+  .foot .meta{font-size:18px;color:#6b6e78;text-align:right;line-height:1.5}
+</style>
+</head>
+<body>
+  <div>
+    <div class="brand"><span class="dot"></span> Startup Credits</div>
+    <h1>Free credits you<br><span class="g">actually qualify for</span></h1>
+    <div class="compare">
+      <div class="cell real"><b>$22,000</b><span>What a bootstrapped founder<br>realistically gets</span></div>
+      <div class="cell ad"><b>$956,000</b><span>What the other directories<br>advertise</span></div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="url">startupcredits.online</div>
+    <div class="meta">80 programmes, every one dated<br>Links re-checked automatically each week</div>
+  </div>
+</body>
+</html>
