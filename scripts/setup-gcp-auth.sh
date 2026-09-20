@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-time setup so the weekly terms check can call Vertex AI from GitHub Actions.
+# One-time setup so the daily terms check can call Vertex AI from GitHub Actions.
 #
 # Run this once, after `gcloud auth login`. It is idempotent — running it again
 # is safe and will just report that everything already exists.
@@ -22,9 +22,12 @@ set -euo pipefail
 # Confirmed with `gcloud billing projects describe`; the other three projects on
 # this account have billing disabled. Note the id ends -ab6, not -a6b6.
 PROJECT="${GCP_PROJECT:-project-432db1bb-a8a3-4cf6-ab6}"
-REPO="${GH_REPO:-theajitnayak/freestack}"
+REPO="${GH_REPO:-theajitnayak/startupcredits}"
 SA_NAME="terms-check"
 POOL="github"
+# Provider ids cannot be renamed in GCP. This one predates the repo rename from
+# freestack to startupcredits; leaving it avoids recreating the provider and
+# re-issuing GCP_WIF_PROVIDER for no functional gain.
 PROVIDER="freestack"
 LOCATION="global"
 
@@ -88,7 +91,7 @@ if "$GCLOUD" iam service-accounts describe "$SA_EMAIL" >/dev/null 2>&1; then
 else
   "$GCLOUD" iam service-accounts create "$SA_NAME" \
     --display-name="startupcredits terms check" \
-    --description="Reads programme pages via Vertex AI for the weekly terms drift check" \
+    --description="Reads programme pages via Vertex AI for the daily terms drift check" \
     --quiet
   echo "created: $SA_EMAIL"
 fi
@@ -121,7 +124,7 @@ else
   "$GCLOUD" iam workload-identity-pools providers create-oidc "$PROVIDER" \
     --location="$LOCATION" \
     --workload-identity-pool="$POOL" \
-    --display-name="freestack repo" \
+    --display-name="startupcredits repo" \
     --issuer-uri="https://token.actions.githubusercontent.com" \
     --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
     --attribute-condition="assertion.repository=='${REPO}'" \
@@ -163,5 +166,5 @@ Try one programme locally before letting the workflow loose on all 80:
 
 Then the same thing in CI:
 
-  gh workflow run "Weekly terms check" --repo $REPO -f only=cloudflare-startups
+  gh workflow run "Daily terms check" --repo $REPO -f only=cloudflare-startups
 EOF
