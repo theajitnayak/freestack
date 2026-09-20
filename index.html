@@ -138,6 +138,9 @@
   .seg button{background:none;border:0;color:var(--muted);padding:6px 14px;border-radius:6px;cursor:pointer;
     font-family:inherit;font-size:13px;transition:.12s;white-space:nowrap}
   .seg button[aria-pressed="true"]{background:var(--panel-2);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+  .seg-ai{border-color:rgba(74,222,128,.45)}
+  .seg-ai button[data-v="ai"]{color:var(--accent)}
+  .seg-ai button[data-v="ai"][aria-pressed="true"]{background:var(--accent-dim);color:var(--accent)}
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
   .chip{border:1px solid var(--line);background:transparent;color:var(--dim);font-size:12px;padding:5px 11px;
     border-radius:20px;cursor:pointer;font-family:inherit;transition:.12s}
@@ -376,6 +379,10 @@
         <button data-v="noref">No referral</button>
         <button data-v="easy">Easy apply</button>
       </div>
+      <div class="seg seg-ai" data-q="focus" title="AI credits are what most founders are hunting for, so they lead by default">
+        <button data-v="all" aria-pressed="true">Everything</button>
+        <button data-v="ai">✦ AI only</button>
+      </div>
       <div class="seg" data-q="country" title="Country programmes are shown alongside the worldwide ones, never instead of them">
         <button data-v="all" aria-pressed="true">🌍 Worldwide</button>
         <button data-v="IN">🇮🇳 India</button>
@@ -418,7 +425,9 @@
   "use strict";
 
   var DATA = [];
-  var state = { q:"", track:"all", filter:"all", country:"all", cat:null, matches:null };
+  var state = { q:"", track:"all", filter:"all", country:"all", focus:"all", cat:null, matches:null };
+
+  function isAI(p){ return p.category === "AI & ML"; }
 
   // "Worldwide" shows only programmes open to everyone. Picking a country ADDS that
   // country's local schemes on top - it never hides the global ones.
@@ -596,6 +605,7 @@
     var q = state.q.toLowerCase();
     var list = DATA.filter(function(p){
       if(!inCountry(p)) return false;
+      if(state.focus === "ai" && !isAI(p)) return false;
       if(state.track !== "all" && p.track !== state.track) return false;
       if(state.cat && p.category !== state.cat) return false;
       if(state.filter === "noref" && p.referral_required) return false;
@@ -614,6 +624,10 @@
       if(am !== bm) return bm - am;
       var ad = a.status === "ended" ? 1 : 0, bd = b.status === "ended" ? 1 : 0;
       if(ad !== bd) return ad - bd;
+      // AI leads. It is what people arrive looking for, and burning through
+      // inference credits is the bill most early teams actually feel.
+      var aa = isAI(a) ? 1 : 0, ba = isAI(b) ? 1 : 0;
+      if(aa !== ba) return ba - aa;
       return (b.value_usd || 0) - (a.value_usd || 0);
     });
 
