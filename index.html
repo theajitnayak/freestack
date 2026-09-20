@@ -548,7 +548,10 @@
 
   function money(n){
     if(n>=1000000) return "$"+(n/1000000).toFixed(1).replace(/\.0$/,"")+"M";
-    if(n>=1000)    return "$"+Math.round(n/1000)+"k";
+    // Below $10k, round to the nearest hundred: these are the amounts a founder
+    // can actually claim, and showing ElevenLabs' $5,500 as "$6k" overstates it.
+    if(n>=10000)   return "$"+Math.round(n/1000)+"k";
+    if(n>=1000)    return "$"+(n/1000).toFixed(1).replace(/\.0$/,"")+"k";
     return "$"+n;
   }
 
