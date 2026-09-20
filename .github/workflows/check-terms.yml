@@ -1,15 +1,22 @@
-name: Weekly terms check
+name: Daily terms check
 
 # check-links.yml asks whether the application links still resolve. This asks
 # whether the pages still SAY what we publish — the amount, the eligibility bar,
 # whether the programme is still open. That is the claim the site is built on,
 # and it is the one that decays silently.
 #
-# Runs on Wednesdays so it does not collide with the Monday link check: two
-# separate issues landing the same morning is how both get ignored.
+# Runs daily at 08:00 IST so a change is visible the next morning, not next
+# week. The report reuses one open issue rather than filing a new one daily.
 on:
   schedule:
-    - cron: "0 6 * * 3"   # Wednesdays, 06:00 UTC
+    # 02:30 UTC = 08:00 IST, every day. Daily rather than weekly because a
+    # scheme that changed on Thursday should not sit unnoticed until the
+    # following Wednesday - by then the deadline may have passed and the
+    # advantage of noticing first is gone.
+    #
+    # 02:30 rather than 02:00: GitHub queues scheduled jobs at the top of the
+    # hour and runs at :00 are routinely delayed by 10-30 minutes.
+    - cron: "30 2 * * *"
   workflow_dispatch:
     inputs:
       only:
@@ -77,7 +84,7 @@ jobs:
               state: 'open',
               labels: 'stale-data',
             });
-            const existing = open.find(i => i.title.startsWith('Terms check:'));
+            const existing = open.find(i => i.title.startsWith("Terms check:"));
 
             if (existing) {
               await github.rest.issues.update({
