@@ -1,0 +1,17 @@
+{
+  "name": "startupcredits",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Data and checks behind startupcredits.online",
+  "scripts": {
+    "test": "node --test scripts/terms-lib.test.mjs",
+    "check:links": "node scripts/check-links.mjs",
+    "check:terms": "node scripts/check-terms.mjs",
+    "install:browser": "playwright install chromium"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  },
+  "license": "MIT"
+}

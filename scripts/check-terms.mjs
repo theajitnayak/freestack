@@ -19,7 +19,7 @@
  * Billing: extraction runs on Vertex AI in your own Google Cloud project, so
  * usage draws on that project's credit rather than a personal API key.
  *
- *   GOOGLE_CLOUD_PROJECT   required, e.g. project-432db1bb-a8a3-4cf6-a6b6
+ *   GOOGLE_CLOUD_PROJECT   required, e.g. project-432db1bb-a8a3-4cf6-ab6
  *   GOOGLE_CLOUD_LOCATION  optional, defaults to us-central1
  *   GOOGLE_ACCESS_TOKEN    optional, falls back to `gcloud auth print-access-token`
  *   REPORT_PATH            optional, defaults to terms-report.md
@@ -41,6 +41,7 @@ import {
   classifyLabel,
   BOT_BLOCKED,
 } from "./terms-lib.mjs";
+import { renderText, closeBrowser } from "./render.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -48,7 +49,7 @@ const MODEL = "gemini-2.5-flash";
 const LOCATION = process.env.GOOGLE_CLOUD_LOCATION || "us-central1";
 const PROJECT = process.env.GOOGLE_CLOUD_PROJECT;
 const TIMEOUT_MS = 30000;
-const CONCURRENCY = 4; // Vertex is fine with more; the marketing sites are not.
+const CONCURRENCY = 2; // A free-trial Vertex quota 429s at 4. Retries cover the rest.
 
 if (!PROJECT) {
   console.error("GOOGLE_CLOUD_PROJECT is not set. Nothing to bill extraction to.");
@@ -71,7 +72,10 @@ async function accessToken() {
   }
 }
 
-async function fetchText(url) {
+/** Below this, whatever came back is a loading shell, not a page. */
+const MIN_USEFUL_CHARS = 600;
+
+async function plainFetch(url) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
   try {
@@ -95,6 +99,34 @@ async function fetchText(url) {
   }
 }
 
+/**
+ * Fetch, then fall back to a real browser when the response is too thin.
+ *
+ * Client-rendered sites hand fetch() a spinner. That covered three of the
+ * twelve India entries on the first run - Startup India Seed Fund, MeitY
+ * GENESIS and MeitY SAMRIDH - which are exactly the schemes worth the most
+ * money. A check that quietly skips those is worse than no check, because it
+ * reports "could not read" and everyone stops looking.
+ *
+ * Bot-blocked stays bot-blocked: a browser will not talk its way past a 403,
+ * and pretending otherwise just burns time.
+ */
+async function fetchText(url) {
+  const direct = await plainFetch(url);
+  if (direct.blocked) return direct;
+
+  const thin = !direct.text || direct.text.length < MIN_USEFUL_CHARS;
+  if (!thin && !direct.error) return direct;
+
+  const rendered = await renderText(url);
+  if (rendered && rendered.length >= MIN_USEFUL_CHARS) {
+    return { text: rendered.slice(0, 24000), finalUrl: url, rendered: true };
+  }
+
+  // Rendering did not help. Report the original failure, not the fallback's.
+  return direct.error ? direct : { ...direct, error: "page had almost no text" };
+}
+
 /** Structured output so we get facts back, not an essay about the facts. */
 const RESPONSE_SCHEMA = {
   type: "OBJECT",
@@ -112,7 +144,9 @@ const RESPONSE_SCHEMA = {
     value_label: {
       type: "STRING",
       description:
-        "The credit amount exactly as the page states it, e.g. 'Up to $5,000'. Empty string if the page does not state an amount.",
+        "EVERY funding amount the page states, not just the headline one. Many programmes run several tracks with different ceilings " +
+        "(e.g. 'Up to Rs 50 lakh main track / up to Rs 1 crore milestone track'). Separate them with ' / '. " +
+        "Copy the figures exactly as written. Empty string if the page states no amount.",
     },
     requirements: {
       type: "ARRAY",
@@ -177,15 +211,30 @@ async function extract(token, program, pageText) {
     },
   };
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  // A free-trial project's Vertex quota is small enough that a run of 12 pages
+  // can exhaust it. Without this, a 429 is indistinguishable in the report from
+  // "this government portal is unreadable" — which sends you debugging the
+  // wrong thing, and quietly understates your coverage.
+  let res;
+  for (let attempt = 0; ; attempt++) {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.status !== 429 && res.status !== 503) break;
+    if (attempt >= 4) break;
+    const waitMs = 2000 * 2 ** attempt + Math.random() * 1000;
+    await new Promise((r) => setTimeout(r, waitMs));
+  }
 
   if (!res.ok) {
     const detail = await res.text();
-    throw new Error(`Vertex ${res.status}: ${detail.slice(0, 300)}`);
+    const reason =
+      res.status === 429
+        ? "Vertex quota exhausted after retries — rerun, or lower CONCURRENCY"
+        : `Vertex ${res.status}: ${detail.slice(0, 200)}`;
+    throw new Error(reason);
   }
 
   const json = await res.json();
@@ -227,11 +276,16 @@ const results = await mapLimit(programs, CONCURRENCY, async (p) => {
 
   try {
     const found = await extract(token, p, page.text);
-    return { p, kind: "read", found };
+    return { p, kind: "read", found, rendered: page.rendered === true };
   } catch (err) {
     return { p, kind: "error", error: err.message };
   }
 });
+
+// Without this the shared browser keeps the event loop alive and the run hangs.
+await closeBrowser();
+
+const renderedCount = results.filter((r) => r.rendered).length;
 
 const drift = [];
 const confirmed = [];
@@ -306,7 +360,11 @@ const today = new Date().toISOString().slice(0, 10);
 let md = `# Terms check — ${today}\n\n`;
 md += `Read ${results.length} programme pages with \`${MODEL}\`. `;
 md += `${confirmed.length} still match what we publish, ${drift.length} may have drifted, `;
-md += `${needsEyes.length} could not be read automatically.\n\n`;
+md += `${needsEyes.length} could not be read automatically.`;
+if (renderedCount) {
+  md += ` ${renderedCount} needed a real browser — those sites send an empty shell to a plain fetch.`;
+}
+md += `\n\n`;
 md += `Nothing here has been applied to \`data/programs.json\`. Each item is a proposal with a quote — confirm it on the page before editing.\n\n`;
 
 if (drift.length) {
