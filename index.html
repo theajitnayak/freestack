@@ -712,12 +712,27 @@
     var host = "";
     try { host = new URL(p.url).hostname; } catch(e){}
     if(!host) return letterTile(p.company);
+    /* The fallback letter travels as a data attribute. It used to be built as
+       markup inside an inline onerror, but letterTile emits double quotes and
+       the attribute is double quoted, so the parser broke and leaked the letter
+       plus the stray quotes as visible text on every card. */
     return '<img class="logo" src="assets/logos/' + esc(host) + '.png" alt="" loading="lazy" ' +
-           'width="28" height="28" onerror="this.outerHTML=' + "'" + letterTile(p.company).replace(/'/g, "&#39;") + "'" + '">';
+           'width="28" height="28" data-letter="' + esc(firstLetter(p.company)) + '">';
+  }
+  function firstLetter(name){
+    return (String(name == null ? "" : name).trim().charAt(0) || "?").toUpperCase();
   }
   function letterTile(name){
-    return '<span class="logo logo-fallback" aria-hidden="true">' + esc((name || "?").trim().charAt(0).toUpperCase()) + '</span>';
+    return '<span class="logo logo-fallback" aria-hidden="true">' + esc(firstLetter(name)) + '</span>';
   }
+  /* One listener covers every logo, including cards rendered after a filter
+     change. Error events do not bubble, hence the capture phase. */
+  document.addEventListener("error", function(e){
+    var el = e.target;
+    if(el && el.tagName === "IMG" && el.className.indexOf("logo") > -1 && el.getAttribute("data-letter")){
+      el.outerHTML = letterTile(el.getAttribute("data-letter"));
+    }
+  }, true);
 
   function card(p){
     var isMatch = state.matches && state.matches.ids[p.id];
