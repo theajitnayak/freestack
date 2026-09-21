@@ -58,6 +58,8 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   body{background:var(--page);color:var(--ink);font-family:var(--sans);
     font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
     font-feature-settings:'tnum' 1,'cv05' 1;}
@@ -285,6 +287,29 @@
   .contrib code{background:var(--surface);border:1px solid var(--line);padding:2px 6px;
     border-radius:4px;font-size:13px;color:var(--ink)}
 
+  /* ---------- notify ----------
+     The daily check already knows when a programme changes; until now that
+     knowledge died in a GitHub issue. This is the same signal, pushed.
+     Deliberately plain: no subscriber count, no urgency, no promise of a
+     "newsletter". The offer is the diff, nothing more. Hidden entirely unless
+     NOTIFY_ENDPOINT is configured, so a half-wired form never ships. */
+  .notify{background:var(--blue-bg);border:1px solid #BFDBFE;border-radius:8px;
+    padding:var(--s3);margin-bottom:var(--s4);max-width:65ch}
+  .notify h3{margin:0 0 var(--s1);font-size:16px;color:var(--ink);font-weight:600}
+  .notify p{margin:0 0 var(--s2);color:var(--ink-2)}
+  .notify form{display:flex;gap:var(--s1);flex-wrap:wrap}
+  .notify input[type=email]{flex:1;min-width:220px;font-family:inherit;font-size:15px;
+    padding:9px 12px;border:1px solid var(--line-strong);border-radius:6px;
+    background:var(--surface);color:var(--ink)}
+  .notify input[type=email]:focus{outline:2px solid var(--blue);outline-offset:-1px;border-color:var(--blue)}
+  .notify .btn{padding:9px 16px;border-radius:6px}
+  .notify .btn[disabled]{opacity:.55;cursor:default}
+  .notify-note{margin:var(--s1) 0 0;font-size:13px;color:var(--ink-3)}
+  /* Status colours reuse the table's meanings: green is verified, red is wrong. */
+  .notify-status{margin:var(--s2) 0 0;font-size:14px;font-weight:500}
+  .notify-status.ok{color:var(--ok)}
+  .notify-status.bad{color:var(--bad)}
+
   @media (max-width:720px){
     .hero{padding:var(--s4) 0 var(--s3)}
     h1{font-size:32px}
@@ -508,6 +533,19 @@
 
 <footer>
   <div class="wrap">
+    <section class="notify" id="notify" hidden>
+      <h3>Get told when one of these changes</h3>
+      <p>Every programme page on this list is re-read each morning. When an amount moves, an eligibility bar shifts, or a scheme quietly closes, you get one email that says what changed and which programme. Nothing else is sent.</p>
+      <form id="notify-form">
+        <label class="sr-only" for="notify-email">Email address</label>
+        <input type="email" id="notify-email" name="email" placeholder="you@example.com"
+               required autocomplete="email" spellcheck="false">
+        <button type="submit" class="btn btn-primary" id="notify-submit">Notify me</button>
+      </form>
+      <p class="notify-note">Change alerts only. Unsubscribe in one click. Your address is not sold or shared.</p>
+      <p class="notify-status" id="notify-status" role="status" aria-live="polite"></p>
+    </section>
+
     <div class="contrib">
       <h3>Know a programme we're missing? Or one that's died?</h3>
       <p style="margin:0 0 10px">The data is a single open file — <code>data/programs.json</code>. One entry, one pull request. Flagging a dead programme is as valuable as adding a live one; that's the whole point of this list.</p>
@@ -977,6 +1015,63 @@
         ').<br><br>If you opened this file directly from disk, run a local server instead:<br>' +
         '<code style="color:var(--blue)">npx serve</code> or <code style="color:var(--blue)">python -m http.server</code></div>';
     });
+})();
+</script>
+
+<script>
+(function(){
+  "use strict";
+
+  /* Where the address is POSTed as {"email": "..."}. Any endpoint that accepts
+     a JSON POST works — Buttondown, ConvertKit, Formspree, or a Cloud Run
+     function on the same project that already bills the daily check.
+
+     Left empty on purpose. The form stays hidden until this is set, so the
+     site never shows a signup box that silently drops addresses. */
+  var NOTIFY_ENDPOINT = "";
+
+  var section = document.getElementById("notify");
+  if (!section || !NOTIFY_ENDPOINT) return;
+  section.hidden = false;
+
+  var form   = document.getElementById("notify-form");
+  var input  = document.getElementById("notify-email");
+  var button = document.getElementById("notify-submit");
+  var status = document.getElementById("notify-status");
+
+  function say(msg, kind){
+    status.textContent = msg;
+    status.className = "notify-status" + (kind ? " " + kind : "");
+  }
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    if (button.disabled) return;
+
+    var email = input.value.trim();
+    if (!email) return;
+
+    button.disabled = true;
+    say("Adding you…");
+
+    fetch(NOTIFY_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email })
+    })
+    .then(function(res){
+      // 409 is the common "already subscribed" reply. That is not a failure
+      // from the reader's side, so it should not read like one.
+      if (res.status === 409) { say("You're already on the list.", "ok"); return; }
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      say("Done. You'll hear from us only when something changes.", "ok");
+      form.reset();
+    })
+    .catch(function(){
+      say("That didn't go through. Try again, or open an issue on GitHub.", "bad");
+      button.disabled = false;
+    });
+  });
 })();
 </script>
 </body>
